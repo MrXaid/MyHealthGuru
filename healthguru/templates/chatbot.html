@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>{% block title %}Django Chatbot{% endblock %}</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <script src="https://code.jquery.com/jquery-3.7.1.js" integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+</head>
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'css/chatbot.css' %}">
+
+<body>
+    <h1 class="text-3xl tracking-tight font-light" id="chat-header">This is Our Chatbot</h1>
+    <div>
+        <div id="chatbot">
+            <p class="botText"><span>Hi there</span></p>
+        </div>
+
+        <div id="userInput">
+            <input type="text" id="textInput" name="userMessage" placeholder="Type your Message Here ...." />
+            <input type="submit" value="Send" id="buttonInput" />
+        </div>
+    </div>
+    <script>
+      let chatId = 1; // Initialize chat ID outside the function
+      let chatEnded = false; // Initialize chat flag
+      let chatHistory = []; // Initialize chat history array
+  
+      function getUserResponse() {
+          if (!chatEnded) {
+              // If chat has ended, reset chat ID and clear chat history
+              chatId = 1;
+              $('#chatbot').empty();
+              chatHistory = [];
+              chatEnded = false;
+          }
+          console.log(chatHistory)
+  
+          var userText = $('#textInput').val();
+          var userHTML = "<p class='userText'>User: <span>" + userText + "</span></p>";
+          $('#textInput').val("");
+          $('#chatbot').append(userHTML);
+  
+          // AJAX request to send user message, chatId, chatEnded flag, and chatHistory array to the server
+          $.get('/chatbot/getResponse', {
+              userMessage: userText,
+              chatId: chatId,
+              chatEnded: chatEnded,
+              chatHistory: JSON.stringify(chatHistory)
+          }).done(function (data) {
+              var botResponse = data.botResponse;
+              var returnedMessage = "<p class='botText' >Chatbot: <span>" + botResponse + "</span></p>";
+              $('#chatbot').append(returnedMessage);
+  
+              // Append bot response to chat history
+              chatHistory.push(botResponse);
+  
+              // Update chat ID and chatEnded flag based on the response
+              chatId++;
+              chatEnded = data.chatEnded;
+          });
+      }
+  
+      $('#buttonInput').click(function () {
+          getUserResponse();
+      });
+  </script>
+
+</body>
+</html>
